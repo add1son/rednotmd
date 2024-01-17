@@ -128,6 +128,9 @@ def proc_blktype1(blklns):
         blklns[-1] = blklns[-1][:-2] # strip end
     elif blklns[-1].endswith("'"):
         blklns[-1] = blklns[-1][:-1] # strip end
+    elif blklns[-1].endswith(': null}'): # this is a quick hack, we may lose data
+        print('nullend detected: ', blklns[-1])    
+        blklns[-1] = '' # remove line
     else:
         print(blklns[-1])
         raise NotImplementedError('blktype 1: unrecognized ending for last line')
@@ -186,6 +189,9 @@ def proc_blktype2(blklns):
         blklns[-1] = blklns[-1][:-2] # strip end
     elif blklns[-1][-1]=='"':
         blklns[-1] = blklns[-1][:-1] # strip end
+    elif blklns[-1].endswith(': null}'): # this is a quick hack, we may lose data
+        print('nullend detected: ', blklns[-1])    
+        blklns[-1] = blklns[-1][:-7]
     else:
         print(blklns[-1])
         raise NotImplementedError('blktype 2: unrecognized ending for last line')
@@ -285,9 +291,15 @@ def blockprocess(blkdescr, blkdata):
         if not sln=='':
             newblkhead.append(sln)
     blkhead = newblkhead
-            
-    # print(blktype, len(blkhead), len(blklns))
-    assert blktype > 0, 'unrecognized block type'
+     
+    # detect empty ill-formatted blocks
+    if len(blklns)==0:
+        print('badblock detected: ', blkdescr)
+        blktype = 666 # bad block
+       
+    if blktype <= 0:
+        print(blkdescr, blktype, len(blkhead), len(blklns))
+        raise ValueError('unrecognized block type')
      
     # post process different block types
     if blktype == 1:
@@ -300,6 +312,8 @@ def blockprocess(blkdescr, blkdata):
         else:
             raise NotImplementedError()
         pass # for the rest, do nothing
+    elif blktype == 666:
+        pass
     else:
         raise ValueError('unknown blocktype')
 
