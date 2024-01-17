@@ -1,9 +1,5 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jan 10 23:32:05 2024
-
-@author: werts-moltech
-
 Python 3.9 on Windows 10
 """
 
