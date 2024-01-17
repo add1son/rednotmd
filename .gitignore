@@ -1,0 +1,17 @@
+*.bak
+*.pyc
+*.mat
+*.zip
+.vscode/settings.json
+.ipynb_checkpoints/
+.virtual_documents/
+vscode/
+build/
+
+# Git is case-sensitive on some operating systems
+PyFVTool.egg-info/
+pyfvtool.egg-info/
+
+local/
+input-rednotebook-copy/
+output/
