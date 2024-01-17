@@ -130,7 +130,7 @@ def proc_blktype1(blklns):
         blklns[-1] = blklns[-1][:-1] # strip end
     elif blklns[-1].endswith(': null}'): # this is a quick hack, we may lose data
         print('nullend detected: ', blklns[-1])    
-        blklns[-1] = '' # remove line
+        blklns[-1] = blklns[-1][:-7]
     else:
         print(blklns[-1])
         raise NotImplementedError('blktype 1: unrecognized ending for last line')
