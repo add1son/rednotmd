@@ -8,7 +8,7 @@ from pathlib import Path
 
 ## script configuration
 
-df = './input-rednotebook-copy/'
+df = './RedNotebook/data/'
 dout = './output/'
 silent = False # ask for confirmations
 
@@ -65,25 +65,29 @@ def parserednotfile(pf):
                     # for lnm in lnml:
                     #     print('>>>>', lnm)
                     # print(int(lnml[0]), end =', ') # day of month
-                    blkdescrs.append(fp.stem+'-'+'{0:02d}'.format(int(lnml[0])))
-                    
-                    lnm1strip = lnml[1].lstrip()
-                    if len(lnm1strip) > 0:
-                        assert lnm1strip[0] == '{', 'does not start with "{"'
-                        # print('**************TYPE 1***************')
-                        if prevtyp == 2:
-                            # print('!!!! TYPE CHANGE WITHIN SAME FILE')
-                            prevtyp = 1
+                    if (len(lnml) < 2):
+                        print('    Unexpected line format. Skipping.')
+                        print('      Contents was:', ln)
                     else:
-                        # print('**************TYPE 2***************')
-                        if prevtyp == 1:
-                            #  print('!!!! TYPE CHANGE WITHIN SAME FILE')
-                            prevtyp = 2
-                    # start new block
-                    if len(lnm1strip)>0:
-                        blk=[lnm1strip]
-                    else:
-                        blk=[]
+                        blkdescrs.append(fp.stem+'-'+'{0:02d}'.format(int(lnml[0])))
+                        
+                        lnm1strip = lnml[1].lstrip()
+                        if len(lnm1strip) > 0:
+                            assert lnm1strip[0] == '{', 'does not start with "{"'
+                            # print('**************TYPE 1***************')
+                            if prevtyp == 2:
+                                # print('!!!! TYPE CHANGE WITHIN SAME FILE')
+                                prevtyp = 1
+                        else:
+                            # print('**************TYPE 2***************')
+                            if prevtyp == 1:
+                                #  print('!!!! TYPE CHANGE WITHIN SAME FILE')
+                                prevtyp = 2
+                        # start new block
+                        if len(lnm1strip)>0:
+                            blk=[lnm1strip]
+                        else:
+                            blk=[]
                 else:
                     blk.append(ln.lstrip())
    
@@ -102,7 +106,7 @@ class RawBlock:
         self.data = blklns
 
 
-def proc_blktype1(blklns):
+def proc_blktype1(blklns, blkdescr):
     """
     Process a raw single-date RedNoteBook block of type 1
 
@@ -129,7 +133,7 @@ def proc_blktype1(blklns):
     elif blklns[-1].endswith("'"):
         blklns[-1] = blklns[-1][:-1] # strip end
     elif blklns[-1].endswith(': null}'): # this is a quick hack, we may lose data
-        print('nullend detected: ', blklns[-1])    
+        print('('+blkdescr+') nullend detected:', blklns[-1])    
         blklns[-1] = blklns[-1][:-7]
     else:
         print(blklns[-1])
@@ -160,7 +164,7 @@ def proc_blktype1(blklns):
     return newblklns
 
 
-def proc_blktype2(blklns):
+def proc_blktype2(blklns, blkdescr):
     """
     Process a raw single-date RedNoteBook block of type 2   
 
@@ -190,7 +194,7 @@ def proc_blktype2(blklns):
     elif blklns[-1][-1]=='"':
         blklns[-1] = blklns[-1][:-1] # strip end
     elif blklns[-1].endswith(': null}'): # this is a quick hack, we may lose data
-        print('nullend detected: ', blklns[-1])    
+        print('('+blkdescr+') nullend detected: ', blklns[-1])    
         blklns[-1] = blklns[-1][:-7]
     else:
         print(blklns[-1])
@@ -294,7 +298,7 @@ def blockprocess(blkdescr, blkdata):
      
     # detect empty ill-formatted blocks
     if len(blklns)==0:
-        print('badblock detected: ', blkdescr)
+        print('('+blkdescr+') bad block!')
         blktype = 666 # bad block
        
     if blktype <= 0:
@@ -303,9 +307,9 @@ def blockprocess(blkdescr, blkdata):
      
     # post process different block types
     if blktype == 1:
-        blklns = proc_blktype1(blklns)
+        blklns = proc_blktype1(blklns, blkdescr)
     elif blktype == 2:
-        blklns = proc_blktype2(blklns)
+        blklns = proc_blktype2(blklns, blkdescr)
     elif blktype == 3:
         if blklns[-1][-1] == '}':
             blklns[-1] = blklns[-1][:-1] # strip end
@@ -367,13 +371,20 @@ fplist = [f for f in inpath.iterdir()]
 
 # read files
 # and first-step processing
+
+print()
+print('Phase 1: Read files with initial parsing into blocks')
+print(55*'-')
 allblks = []
 for fp in fplist:
     if fp.is_file():
         if fp.suffix.lower()=='.txt':
+            print(' ', fp.name)
             blkdic = parserednotfile(fp)
             allblks.append(blkdic)
-            
+print(55*'-')
+print()
+   
             
 # second-step processing
 # scan all blocks, dissect, get header if any and discover type of block
@@ -382,14 +393,21 @@ for fp in fplist:
 # block type 2 => OK
 # block type 3 => RAW OUTPUT (only 3 dates have this format)
 #
+print()
+print('Phase 2: Process contents of all blocks')
+print(55*'-')
 rawblks = []
 for blks in allblks:
     for blkdescr, blkdata in blks.items():
         rawblks.append(blockprocess(blkdescr, blkdata))
-
+print(55*'-')
+print()
 
 
 # create year, month subdirectories and write blocks to file
+print()
+print('Phase 3: Write contents into MarkDown files')
+print(55*'-')
 for rb in rawblks:
     # parse date in filename
     ofn = rb.descr.split(' ')[0] # split at first space
@@ -424,6 +442,10 @@ for rb in rawblks:
     if op.exists(): # need to check again: it may or may not have been created
         opf = Path(op, ofn+'.md')
         blockwrite(opf, rb)
+print(55*'-')
+print()
+print('Done.')
+print()
 
 
 
