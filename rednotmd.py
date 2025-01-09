@@ -8,7 +8,7 @@ from pathlib import Path
 
 ## script configuration
 
-df = './RedNotebook/data/'
+df = './Export/'
 dout = './output/'
 silent = False # ask for confirmations
 
@@ -225,6 +225,8 @@ def proc_blktype2(blklns, blkdescr):
                     oc = '"'
                 elif c == ' ':
                     oc = ' '
+                elif c == 'U':  # Add this case
+                    oc = ' ' 
                 else:
                     # UNKNOWN ESCAPE CODE
                     print(ord(c))
