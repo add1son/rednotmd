@@ -12,3 +12,7 @@ The module `txt2tagsmw.py` is a slightly modified version of `txt2tags.py` (see 
 
 * The script looks for a folder "Export" in the directory it is ran from, this allows you to take your extracted RedNotebook data instead of looking for it originally referenced at './RedNotebook/data/'
 * Added the ability to process the 'U' character
+
+# Additional changes pending 
+* Formatting could be optimized
+* Change output directory to not format by Year and keep the original filename
