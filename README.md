@@ -15,4 +15,4 @@ The module `txt2tagsmw.py` is a slightly modified version of `txt2tags.py` (see 
 
 # Additional changes pending 
 * Formatting could be optimized
-* Change output directory to not format by Year and keep the original filename
+* Change output directory to not format by Year and change filename to the date it was written
